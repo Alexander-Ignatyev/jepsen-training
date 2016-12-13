@@ -1,14 +1,8 @@
-# jepsen.zookeeper
+# Jepsen's training project
 
-A Clojure library designed to ... well, that part is up to you.
+https://github.com/jepsen-io/jepsen
 
 ## Usage
 
-FIXME
+    lein run test --nodes-file ~/nodes --username admin
 
-## License
-
-Copyright © 2016 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
