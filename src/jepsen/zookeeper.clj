@@ -94,7 +94,15 @@
                (case (:f op)
                  :read (assoc op :type :ok, :value @a)
                  :write (do (avout/reset!! a (:value op))
-                            (assoc op :type :ok)))))
+                            (assoc op :type :ok))
+                 :cas (let [[value value'] (:value op)
+                            type (atom :fail)]
+                        (avout/swap!! a (fn [current]
+                                          (if (= current value)
+                                            (do (reset! type :ok) value')
+                                            (do (reset! type :fail) current))))
+                        (assoc op :type @type)
+                        ))))
     (teardown! [_ test]
       (.close conn))))
 
@@ -109,7 +117,7 @@
          :os debian/os
          :db (db "3.4.5+dfsg-2")
          :client (client nil nil)
-         :generator (->> (gen/mix [r w])
+         :generator (->> (gen/mix [r w cas])
                          (gen/stagger 1)
                          (gen/clients)
                          (gen/time-limit 15))}))
