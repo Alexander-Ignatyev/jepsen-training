@@ -125,4 +125,7 @@
 (defn -main
   "Handles command line arguments. Can either run a test, or a web server for browsing results."
   [& args]
-  (cli/run! (cli/single-test-cmd {:test-fn zk-test}) args))
+  (cli/run! (merge (cli/single-test-cmd {:test-fn zk-test})
+                   (cli/serve-cmd))
+
+             args))
