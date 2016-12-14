@@ -1,18 +1,23 @@
 
 (ns jepsen.zookeeper
   (:gen-class)
-  (:require [jepsen [cli :as cli]
+  (:require [jepsen
+             [checker :as checker]
+             [cli :as cli]
              [tests :as tests]
              [control :as c]
              [client :as client]
              [db :as db]
              [generator :as gen]
+             [nemesis :as nemesis]
              [util :as util :refer [timeout]]]
+            [jepsen.checker.timeline :as timeline]
             [clojure.tools.logging :refer :all]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [jepsen.os.debian :as debian]
-            [avout.core :as avout]))
+            [avout.core :as avout]
+            [knossos.model :as model]))
 
 
 
@@ -117,10 +122,19 @@
          :os debian/os
          :db (db "3.4.5+dfsg-2")
          :client (client nil nil)
+         :nemesis (nemesis/partition-random-halves)
          :generator (->> (gen/mix [r w cas])
                          (gen/stagger 1)
-                         (gen/clients)
-                         (gen/time-limit 15))}))
+                         (gen/nemesis (gen/seq (cycle [(gen/sleep 5)
+                                                       {:type :info, :f :start}
+                                                       (gen/sleep 5)
+                                                       {:type :info, :f :stop}])))
+                         (gen/time-limit 15))
+         :model (model/cas-register 0)
+         :checker (checker/compose {:linear checker/linearizable
+                                    :perf (checker/perf)
+                                    :html (timeline/html)})
+         }))
 
 (defn -main
   "Handles command line arguments. Can either run a test, or a web server for browsing results."
